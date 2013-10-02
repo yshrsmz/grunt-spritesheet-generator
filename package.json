@@ -1,0 +1,31 @@
+{
+  "name": "grunt-spritesheet-generator",
+  "version": "0.0.1",
+  "description": "grunt task for making css spritesheet",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/yshrsmz/grunt-spritesheet-generator.git"
+  },
+  "keywords": [
+    "grunt",
+    "spritesheet",
+    "css"
+  ],
+  "author": "yshrsmz",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/yshrsmz/grunt-spritesheet-generator/issues"
+  },
+  "dependencies": {
+    "grunt": "~0.4.1",
+    "async": "~0.2.9",
+    "q-fs": "~0.1.36",
+    "underscore": "~1.5.2",
+    "grunt-contrib-coffee": "~0.7.0",
+    "grunt-contrib-clean": "~0.5.0"
+  }
+}
