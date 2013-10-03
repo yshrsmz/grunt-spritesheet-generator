@@ -1,11 +1,61 @@
-var fs = require('fs');
+var fs = require('fs'),
+    exec = require('child_process').exec,
+    async = require('async'),
+    path = require('path'),
+    qfs = require('q-fs'),
+    _ = require('underscore'),
+    mustache = require('mustache'),
+    im = require('imagemagick'),
+
+    ImageMagick = require('./lib/layout'),
+    Style = require('./lib/style'),
+    Layout = require('./lib/layout'),
+
+    separator = path.sep || '/';
 
 module.exports = function(grunt) {
     'use strict';
 
-    var Builder = require('../').Builder;
+    /**
+     * write style sheet file
+     * @param options
+     * @param callback
+     * @returns {*}
+     */
+    var writeStyleSheet = function(options, callback) {
+        var that = this,
+            templateData = {},
+            template = fs.readFileSync(options.templateUrl || __dirname + '/../tasks/template.mustache', 'utf8'),
+            result;
 
-    grunt.registerMultiTask('spritegen', 'Compile images to sprite sheet', function() {
+        options.configs.forEach(function(config) {
+            if (config.name.toLowerCase() === 'legacy') {
+
+                templateData.legacy = config.css;
+
+            } else if (config.name.toLowerCase() === 'retina') {
+
+                templateData.retina = config.css;
+            }
+        });
+
+        result = mustache.render(template, templateData);
+
+        return fs.writeFile(options.outputStyleFilePath, result, function(err) {
+            if (err) {
+                throw err;
+            } else {
+                console.log('CSS file written to ', options.outputStyleFilePath);
+                return callback();
+            }
+        });
+    };
+
+    var writeSpriteImage = function() {
+
+    };
+
+    grunt.registerMultiTask('sgen', 'Compile images to sprite sheet', function() {
         var options = this.options(),
             done = this.async(),
             srcFiles;
@@ -20,7 +70,7 @@ module.exports = function(grunt) {
 
             srcFiles = grunt.file.expand(file.src);
 
-            [].forEach.call(srcFiles, function(file) {
+            srcFiles.forEach(function(file) {
                 f = dir + file;
 
                 if (fs.statSync(f).isFile()) {
@@ -31,10 +81,9 @@ module.exports = function(grunt) {
             options.images = files;
             options.outputDirectory = dir + file.dest;
 
-            builder = Builder.fromGruntTask(options);
-            builder.build(callback);
-        },
-        done);
+
+        }, done);
+
 
     });
 };
