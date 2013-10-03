@@ -1,0 +1,11 @@
+{{#std}}
+{{#styles}}
+@mixin {{&name}} {
+	background-image: url(setImagePath("{{&imagePath}}", $imgPath, $version));
+	background-size: {{imageWidth}}px {{imageHeight}}px;
+	width: {{width}}px;
+	height: {{height}}px;
+	background-position: {{x}}px {{y}}px;
+}
+{{/styles}}
+{{/std}}
