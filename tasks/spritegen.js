@@ -15,6 +15,7 @@ var fs = require('fs'),
 module.exports = function(grunt) {
     'use strict';
 
+
     /**
      * write style sheet file
      * @param options
