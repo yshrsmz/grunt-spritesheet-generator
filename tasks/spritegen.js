@@ -5,11 +5,10 @@ var fs = require('fs'),
     qfs = require('q-fs'),
     _ = require('underscore'),
     mustache = require('mustache'),
-    im = require('imagemagick'),
 
-    ImageMagick = require('./lib/layout'),
-    Style = require('./lib/style'),
-    Layout = require('./lib/layout'),
+    ImageMagick = require('../lib/imagemagick'),
+    Style = require('../lib/style'),
+    Layout = require('../lib/layout'),
 
     separator = path.sep || '/';
 
