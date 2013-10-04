@@ -1,6 +1,6 @@
-var ImageMagick = require('lib/imagemagick'),
-    Layout = require('lib/layout'),
-    Style = require('lib/style'),
+var ImageMagick = require('./imagemagick'),
+    Layout = require('./layout'),
+    Style = require('./style'),
     async = require('async'),
     ensureDirectory,
     exec = require('child_process').exec,
@@ -105,7 +105,7 @@ SpriteSheetBuilder = (function() {
         var css,
             _this = this,
             templateData = {},
-            template = fs.readFileSync(this.options.templateUrl || __dirname + '/template.mustache', 'utf8'),
+            template = fs.readFileSync(this.options.templateUrl || __dirname + '/../template.mustache', 'utf8'),
             result;
 
         css = this.configs.map(function(config) {
