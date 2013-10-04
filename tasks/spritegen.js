@@ -3,7 +3,7 @@ var fs = require('fs');
 module.exports = function(grunt) {
     'use strict';
 
-    var Builder = require('../lib/builder');
+    var Builder = require('lib/builder');
 
     grunt.registerMultiTask('spritegen', 'Compile images to sprite sheet', function() {
         var options = this.options(),

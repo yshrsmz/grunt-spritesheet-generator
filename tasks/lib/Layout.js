@@ -6,9 +6,11 @@ Layout = (function() {
     Layout.prototype.layout = function(images, options) {
         var hmargin, hpadding, i, lp, root, vmargin, vpadding, _i, _j, _len, _len1,
             _this = this;
-        if (options == null) {
+
+        if (!options) {
             options = {};
         }
+
         if (!images || !images.length) {
             return {
                 width: 0,
@@ -49,10 +51,10 @@ Layout = (function() {
             node = _this.findNode(root, i.w, i.h);
             if (node) {
                 _this.placeImage(i, node, hpadding, vpadding, hmargin, vmargin);
-                return _this.splitNode(node, i.w, i.h);
+                _this.splitNode(node, i.w, i.h);
             } else {
                 root = _this.grow(root, i.w, i.h);
-                return lp(i);
+                lp(i);
             }
         };
         for (_j = 0, _len1 = images.length; _j < _len1; _j++) {
@@ -81,7 +83,7 @@ Layout = (function() {
         image.cssw = image.width + (2 * hpadding);
         image.cssh = image.height + (2 * vpadding);
         image.x = image.cssx + hpadding;
-        return image.y = image.cssy + vpadding;
+        image.y = image.cssy + vpadding;
     };
 
     Layout.prototype.findNode = function(root, w, h) {
@@ -100,7 +102,7 @@ Layout = (function() {
             w: node.w,
             h: node.h - h
         };
-        return node.right = {
+        node.right = {
             x: node.x + w,
             y: node.y,
             w: node.w - w,

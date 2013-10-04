@@ -12,8 +12,8 @@ var exec = require('child_process').exec,
                 }
                 parts = stdout.split(" ");
                 dims = parts[2].split("x");
-                w = parseInt(dims[0]);
-                h = parseInt(dims[1]);
+                w = parseInt(dims[0], 10);
+                h = parseInt(dims[1], 10);
                 filename = filepath.split('/').pop();
                 name = filename.split('.').shift();
                 image = {
@@ -28,9 +28,15 @@ var exec = require('child_process').exec,
         };
 
         ImageMagick.prototype.composite = function(options, callback) {
-            var command, downsampling, filepath, height, images, width,
-                _this = this;
-            filepath = options.filepath, images = options.images, width = options.width, height = options.height, downsampling = options.downsampling;
+
+            var _this = this,
+                filepath = options.filepath,
+                images = options.images,
+                width = options.width,
+                height = options.height,
+                downsampling = options.downsampling,
+                command;
+
             console.log('  Writing images to sprite sheet...');
             command = " convert -size " + width + "x" + height + " canvas:transparent -alpha transparent " + filepath + " ";
             return this.exec(command, function(error, stdout, stderr) {
@@ -68,4 +74,4 @@ var exec = require('child_process').exec,
         return ImageMagick;
     })();
 
-module.exports = new ImageMagick;
+module.exports = new ImageMagick();

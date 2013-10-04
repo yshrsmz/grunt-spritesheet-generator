@@ -1,6 +1,6 @@
-var ImageMagick = require('../lib/imagemagick'),
-    Layout = require('../lib/layout'),
-    Style = require('../lib/style'),
+var ImageMagick = require('lib/imagemagick'),
+    Layout = require('lib/layout'),
+    Style = require('lib/style'),
     async = require('async'),
     ensureDirectory,
     exec = require('child_process').exec,
@@ -29,42 +29,7 @@ ensureDirectory = function(directory) {
 };
 
 SpriteSheetBuilder = (function() {
-    SpriteSheetBuilder.supportsPngcrush = function(callback) {
-        var _this = this;
-        return exec("which pngcrush", function(error, stdout, stderr) {
-            return callback(stdout && !error && !stderr);
-        });
-    };
 
-    SpriteSheetBuilder.pngcrush = function(image, callback) {
-        return SpriteSheetBuilder.supportsPngcrush(function(supported) {
-            var crushed,
-                _this = this;
-            if (supported) {
-                crushed = "" + image + ".crushed";
-                console.log("\n  pngcrushing, this may take a few moments...\n");
-                return exec("pngcrush -reduce " + image + " " + crushed + " && mv " + crushed + " " + image, function(error, stdout, stderr) {
-                    return callback();
-                });
-            } else {
-                return callback();
-            }
-        });
-    };
-
-    SpriteSheetBuilder.fromGruntTask = function(options) {
-        var builder, config, key, outputConfigurations;
-        builder = new SpriteSheetBuilder(options);
-        outputConfigurations = options.output;
-        delete options.output;
-        if (outputConfigurations && Object.keys(outputConfigurations).length > 0) {
-            for (key in outputConfigurations) {
-                config = outputConfigurations[key];
-                builder.addConfiguration(key, config);
-            }
-        }
-        return builder;
-    };
 
     function SpriteSheetBuilder(options) {
         this.options = options;
@@ -140,7 +105,7 @@ SpriteSheetBuilder = (function() {
         var css,
             _this = this,
             templateData = {},
-            template = fs.readFileSync(this.options.templateUrl || __dirname + '/../tasks/template.mustache', 'utf8'),
+            template = fs.readFileSync(this.options.templateUrl || __dirname + '/template.mustache', 'utf8'),
             result;
 
         css = this.configs.map(function(config) {
@@ -166,6 +131,43 @@ SpriteSheetBuilder = (function() {
                 return callback();
             }
         });
+    };
+
+    SpriteSheetBuilder.supportsPngcrush = function(callback) {
+        var _this = this;
+        return exec("which pngcrush", function(error, stdout, stderr) {
+            return callback(stdout && !error && !stderr);
+        });
+    };
+
+    SpriteSheetBuilder.pngcrush = function(image, callback) {
+        return SpriteSheetBuilder.supportsPngcrush(function(supported) {
+            var crushed,
+                _this = this;
+            if (supported) {
+                crushed = "" + image + ".crushed";
+                console.log("\n  pngcrushing, this may take a few moments...\n");
+                return exec("pngcrush -reduce " + image + " " + crushed + " && mv " + crushed + " " + image, function(error, stdout, stderr) {
+                    return callback();
+                });
+            } else {
+                return callback();
+            }
+        });
+    };
+
+    SpriteSheetBuilder.fromGruntTask = function(options) {
+        var builder, config, key, outputConfigurations;
+        builder = new SpriteSheetBuilder(options);
+        outputConfigurations = options.output;
+        delete options.output;
+        if (outputConfigurations && Object.keys(outputConfigurations).length > 0) {
+            for (key in outputConfigurations) {
+                config = outputConfigurations[key];
+                builder.addConfiguration(key, config);
+            }
+        }
+        return builder;
     };
 
     return SpriteSheetBuilder;
@@ -263,7 +265,7 @@ SpriteSheetConfiguration = (function() {
     };
 
     SpriteSheetConfiguration.prototype.generateCSS = function() {
-        return this.css = this.style.generate({
+        this.css = this.style.generate({
             relativeImagePath: this.httpImagePath,
             images: this.images,
             pixelRatio: this.pixelRatio,
