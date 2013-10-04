@@ -51,7 +51,12 @@ module.exports = function(grunt) {
         });
     };
 
-    var writeSpriteImage = function() {
+    /**
+     * write sprite image file
+     * @param options
+     * @param callback
+     */
+    var writeSpriteImage = function(options, callback) {
 
     };
 
