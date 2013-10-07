@@ -37,7 +37,7 @@ SpriteSheetBuilder = (function() {
         this.buildConfig = __bind(this.buildConfig, this);
         this.files = options.images;
         this.outputConfigurations = {};
-        this.outputDirectory = path.normalize(options.outputDirectory);
+        this.outputDirectory = path.resolve(options.outputDirectory);
 
         if (options.outputCss) {
             this.outputStyleFilePath = [this.outputDirectory, options.outputCss].join(separator);
@@ -182,13 +182,13 @@ SpriteSheetConfiguration = (function() {
         this.layoutImages = __bind(this.layoutImages, this);
         this.build = __bind(this.build, this);
 
-        if (!options.selector) {
-            throw "no selector specified";
-        }
+//        if (!options.selector) {
+//            throw "no selector specified";
+//        }
 
         this.images = [];
         this.filter = options.filter;
-        this.outputDirectory = path.normalize(options.outputDirectory);
+        this.outputDirectory = path.resolve(options.outputDirectory);
         this.files = this.filter ? files.filter(this.filter) : files;
         this.downsampling = options.downsampling;
         this.pixelRatio = options.pixelRatio || 1;
