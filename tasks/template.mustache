@@ -3,6 +3,7 @@
 @mixin {{&name}} {
 	background-image: url(setImagePath("{{&imagePath}}", $imgPath, $version));
 	background-size: {{imageWidth}}px {{imageHeight}}px;
+	background-repeat: no-repeat;
 	width: {{width}}px;
 	height: {{height}}px;
 	background-position: {{x}}px {{y}}px;
