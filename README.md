@@ -15,6 +15,14 @@ Installation
 
 Currently  not available via npm, so you have to manually add the repository in your `package.json`.
 
+```package.json
+"devDependencies": {
+    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.0.2"
+}
+```  
+
+__You should specify tag!__
+
 
 Example
 =======
