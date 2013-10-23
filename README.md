@@ -33,6 +33,8 @@ spritegen: {
 
             // actual path written in output css file.
             httpImagePath: 'http://www.foobar.com/images/mypage/sprite.png',
+
+            layoutType: 'default', // default, vertical, horizontal.
             output: {
                 legacy: {
                     pixelRatio: 1,
@@ -56,3 +58,12 @@ spritegen: {
 grunt.loadNpmTasks('grunt-spritesheet-generator');
 
 ```
+
+Version History
+===============
+
+## 0.0.2
+- add support for vertical/horizontal layout
+
+## 0.0.1
+- initial release

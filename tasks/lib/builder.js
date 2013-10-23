@@ -1,5 +1,7 @@
 var ImageMagick = require('./imagemagick'),
     Layout = require('./layout'),
+    Layout_vertical = require('./layout_vertical'),
+    Layout_horizontal = require('./layout_horizontal'),
     Style = require('./style'),
     async = require('async'),
     ensureDirectory,
@@ -193,6 +195,7 @@ SpriteSheetConfiguration = (function() {
         this.downsampling = options.downsampling;
         this.pixelRatio = options.pixelRatio || 1;
         this.name = options.name || "default";
+        this.layoutType = options.layout || 'default';
 
         if (options.outputStyleDirectoryPath) {
             this.outputStyleDirectoryPath = options.outputStyleDirectoryPath;
@@ -239,7 +242,13 @@ SpriteSheetConfiguration = (function() {
 
         return async.forEachSeries(this.files, this.identify, function() {
             var layout;
-            layout = new Layout();
+            if (_this.layoutType === 'vertical') {
+                layout = new Layout_vertical();
+            } else if (_this.layoutType === 'horizontal') {
+                layout = new Layout_horizontal();
+            } else {
+                layout = new Layout();
+            }
             _this.layout = layout.layout(_this.images, _this.options);
             return callback();
         });

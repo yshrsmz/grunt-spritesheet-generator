@@ -1,0 +1,80 @@
+@mixin gb {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px 0px;
+}
+@mixin gd {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -32px;
+}
+@mixin ge {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -64px;
+}
+@mixin gg {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -96px;
+}
+@mixin gh {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -128px;
+}
+@mixin gl {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -160px;
+}
+@mixin gm {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -192px;
+}
+@mixin gn {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -224px;
+}
+@mixin gq {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -256px;
+}
+@mixin gr {
+	background-image: url(setImagePath("http://www.foobar.com/images/vertical.png", $imgPath, $version));
+	background-size: 32px 320px;
+	background-repeat: no-repeat;
+	width: 32px;
+	height: 32px;
+	background-position: 0px -288px;
+}

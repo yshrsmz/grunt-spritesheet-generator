@@ -1,8 +1,8 @@
 {
   "name": "grunt-spritesheet-generator",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "grunt task for making css spritesheet",
-  "main": "index.js",
+  "main": "Gruntfile.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
