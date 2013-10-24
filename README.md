@@ -70,8 +70,8 @@ grunt.loadNpmTasks('grunt-spritesheet-generator');
 Version History
 ===============
 
-## 0.0.2
+## 0.2.0
 - add support for vertical/horizontal layout
 
-## 0.0.1
+## 0.1.0
 - initial release
