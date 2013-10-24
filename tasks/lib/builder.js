@@ -195,7 +195,7 @@ SpriteSheetConfiguration = (function() {
         this.downsampling = options.downsampling;
         this.pixelRatio = options.pixelRatio || 1;
         this.name = options.name || "default";
-        this.layoutType = options.layout || 'default';
+        this.layoutType = options.layoutType || 'default';
 
         if (options.outputStyleDirectoryPath) {
             this.outputStyleDirectoryPath = options.outputStyleDirectoryPath;

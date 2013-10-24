@@ -20,7 +20,7 @@ module.exports = function(grunt) {
                 options: {
                     outputCss: 'example/output/css/vertical.css',
                     httpImagePath: 'http://www.foobar.com/images/vertical.png',
-                    layout: 'vertical',
+                    layoutType: 'vertical',
                     output: {
                         legacy: {
                             pixelRatio: 1,
@@ -40,7 +40,7 @@ module.exports = function(grunt) {
                 options: {
                     outputCss: 'example/output/css/horizontal.css',
                     httpImagePath: 'http://www.foobar.com/images/horizontal.png',
-                    layout: 'horizontal',
+                    layoutType: 'horizontal',
                     output: {
                         legacy: {
                             pixelRatio: 1,
