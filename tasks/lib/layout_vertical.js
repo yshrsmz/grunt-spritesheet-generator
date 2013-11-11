@@ -72,5 +72,4 @@ var Layout_vertical = (function() {
     return Layout_vertical;
 })();
 
-
 module.exports = Layout_vertical;

@@ -164,7 +164,6 @@ Layout = (function() {
     };
 
     return Layout;
-
 })();
 
 module.exports = Layout;
