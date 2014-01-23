@@ -21,6 +21,7 @@ var path = require('path'),
                 pixelRatio = options.pixelRatio,
                 width = options.width,
                 height = options.height,
+                spIdentifier = options.spIdentifier,
                 css;
 
             css = {
@@ -28,6 +29,7 @@ var path = require('path'),
                 imageWidth: (width / pixelRatio),
                 imageHeight: (height / pixelRatio),
                 pixelRatio: pixelRatio,
+                spIdentifier: spIdentifier,
                 styles: []
             };
 
@@ -38,6 +40,7 @@ var path = require('path'),
                     imageHeight: (height / pixelRatio),
                     pixelRatio: (pixelRatio || 1),
                     name: image.name,
+                    spIdentifier: spIdentifier,
                     width: image.cssw,
                     height: image.cssh,
                     x: (-image.cssx / pixelRatio),

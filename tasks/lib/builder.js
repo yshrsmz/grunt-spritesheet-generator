@@ -30,6 +30,15 @@ ensureDirectory = function(directory) {
     };
 };
 
+getFileNameWithoutExtension = function(path) {
+    var ary = path.split('/'),
+        fileName = ary[ary.length - 1],
+        fileNameAry = fileName.split('.'),
+        result = fileNameAry[0];
+
+    return result;
+}
+
 SpriteSheetBuilder = (function() {
 
 
@@ -107,7 +116,7 @@ SpriteSheetBuilder = (function() {
         var css,
             _this = this,
             templateData = {},
-            template = fs.readFileSync(this.options.templateUrl || __dirname + '/../template.mustache', 'utf8'),
+            template = fs.readFileSync(this.options.templateUrl || __dirname + '/../template_placeholder.mustache', 'utf8'),
             result;
 
         css = this.configs.map(function(config) {
@@ -196,6 +205,7 @@ SpriteSheetConfiguration = (function() {
         this.pixelRatio = options.pixelRatio || 1;
         this.name = options.name || "default";
         this.layoutType = options.layoutType || 'default';
+        this.spIdentifier = options.spIdentifier || getFileNameWithoutExtension(options.outputCss);
 
         if (options.outputStyleDirectoryPath) {
             this.outputStyleDirectoryPath = options.outputStyleDirectoryPath;
@@ -279,7 +289,8 @@ SpriteSheetConfiguration = (function() {
             images: this.images,
             pixelRatio: this.pixelRatio,
             width: this.layout.width,
-            height: this.layout.height
+            height: this.layout.height,
+            spIdentifier: this.spIdentifier
         });
     };
 

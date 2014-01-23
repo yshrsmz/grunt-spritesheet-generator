@@ -1,0 +1,16 @@
+{{#legacy}}
+%{{&spIdentifier}} {
+   background-image: url(setImagePath("{{&imagePath}}"));
+   background-repeat: no-repeat;
+   background-size: {{imageWidth}}px {{imageHeight}}px;
+}
+
+{{#styles}}
+%{{&name}} {
+    @extend %{{&spIdentifier}};
+    width: {{width}}px;
+    height: {{height}}px;
+    background-position: {{x}}px {{y}}px;
+}
+{{/styles}}
+{{/legacy}}
