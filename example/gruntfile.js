@@ -2,7 +2,7 @@
 module.exports = function(grunt) {
 
     grunt.initConfig({
-        spritesheet: {
+        spritegen: {
             
             //
             // Simple example.
@@ -53,6 +53,7 @@ module.exports = function(grunt) {
                     outputCss: 'sprite/css/flags-ex2.css',
                     selector: ".flag",
                     httpImagePath: "http://test.com/static/sprite.png",
+                    spIdentifier: "hoge",
                     output: {
                         legacy: {
                             pixelRatio: 1,

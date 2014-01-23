@@ -1,0 +1,66 @@
+%hoge {
+   background-image: url(setImagePath("http://test.com/static/sprite.png"));
+   background-repeat: no-repeat;
+   background-size: 128px 96px;
+}
+
+%gb {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: 0px 0px;
+}
+%gd {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -32px 0px;
+}
+%ge {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: 0px -32px;
+}
+%gg {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -32px -32px;
+}
+%gh {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -64px 0px;
+}
+%gl {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -64px -32px;
+}
+%gm {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: 0px -64px;
+}
+%gn {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -32px -64px;
+}
+%gq {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -64px -64px;
+}
+%gr {
+    @extend %;
+    width: 32px;
+    height: 32px;
+    background-position: -96px 0px;
+}
