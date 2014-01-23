@@ -43,6 +43,7 @@ spritegen: {
             httpImagePath: 'http://www.foobar.com/images/mypage/sprite.png',
 
             layoutType: 'default', // default, vertical, horizontal.
+            spIdentifier: '', //defaults to css filename without extension.
             output: {
                 legacy: {
                     pixelRatio: 1,
@@ -69,6 +70,9 @@ grunt.loadNpmTasks('grunt-spritesheet-generator');
 
 Version History
 ===============
+
+## 0.3.0
+- change default template to use placeholder, instead of mixin.
 
 ## 0.2.1
 - change version format. sry for inconvenience:(
