@@ -71,6 +71,24 @@ var exec = require('child_process').exec,
             });
         };
 
+        ImageMagick.prototype.resizeImage = function(options, callback) {
+            var command;
+
+            console.log('resize: ' + options.srcpath + ' to ' + options.filepath);
+            command = " convert -resize " + (options.width * options.baseRatio) + "x ";
+            if (options.downsampling) {
+                command += "-filter " + options.downsampling;
+            }
+            command += " "  + options.srcpath + " " + options.filepath;
+
+            exec(command, function(error, stdout, stderr) {
+                if (error || stderr) {
+                    throw "Error in resize (" + filepath + "): " + (error || stderr);
+                }
+                callback();
+            });
+        };
+
         return ImageMagick;
     })();
 

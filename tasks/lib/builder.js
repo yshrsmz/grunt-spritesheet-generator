@@ -49,6 +49,7 @@ SpriteSheetBuilder = (function() {
         this.files = options.images;
         this.outputConfigurations = {};
         this.outputDirectory = path.resolve(options.outputDirectory);
+        this.justResize = options.justResize || true;
 
         if (options.outputCss) {
             this.outputStyleFilePath = [this.outputDirectory, options.outputCss].join(separator);
@@ -101,6 +102,16 @@ SpriteSheetBuilder = (function() {
 
         SpriteSheetConfiguration.baseConfiguration = baseConfig;
 
+        // sort configs by pixelRatio
+        this.configs = this.configs.sort(function(a, b) {
+            if (a.pixelRatio > b.pixelRatio) {
+                return -1
+            } else if (a.pixelRatio < b.pixelRatio) {
+                return 1;
+            }
+            return 0;
+        });
+
         return async.series([
             function(callback) {
                 return async.forEachSeries(_this.configs, _this.buildConfig, callback);
@@ -113,19 +124,49 @@ SpriteSheetBuilder = (function() {
     };
 
     SpriteSheetBuilder.prototype.writeStyleSheet = function(callback) {
-        var css,
+        var retinaConfig,
             _this = this,
             templateData = {},
             template = fs.readFileSync(this.options.templateUrl || __dirname + '/../template_placeholder.mustache', 'utf8'),
-            result;
+            result,
+            style;
 
-        css = this.configs.map(function(config) {
-            return config.css;
+        retinaConfig = this.configs.filter(function(config) {
+            if (config.name.toLowerCase() === 'retina') {
+                return true;
+            }
         });
 
         [].forEach.call(_this.configs, function(config) {
             if (config.name.toLowerCase() === 'legacy') {
-                templateData.legacy = config.css;
+                if (_this.justResize && (Object.keys(config.css)).length < 1) {
+                    templateData.legacy = {
+                        imageHeight: retinaConfig[0].css.imageHeight,
+                        imagePath: retinaConfig[0].css.imagePath,
+                        imageWidth: retinaConfig[0].css.imageWidth,
+                        pixelRatio: config.pixelRatio,
+                        spIdentifier: retinaConfig[0].css.spIdentifier,
+                        styles: []
+                    };
+
+                    for (var i = 0, len = retinaConfig[0].css.styles.length; i < len; i++) {
+                        style = retinaConfig[0].css.styles[i];
+                        templateData.legacy.styles.push({
+                            height: style.height * config.baseRatio,
+                            imageHeight: style.imageHeight,
+                            imagePath: style.imagePath,
+                            imageWidth: style.imageWidth,
+                            name: style.name,
+                            pixelRatio: config.pixelRatio,
+                            spIdentifier: style.spIdentifier,
+                            width: style.width * config.baseRatio,
+                            x: style.x,
+                            y: style.y
+                        });
+                    }
+                } else {
+                    templateData.legacy = config.css;
+                }
             } else if (config.name.toLowerCase() === 'retina') {
                 templateData.retina = config.css;
             }
@@ -206,6 +247,7 @@ SpriteSheetConfiguration = (function() {
         this.name = options.name || "default";
         this.layoutType = options.layoutType || 'default';
         this.spIdentifier = options.spIdentifier || getFileNameWithoutExtension(options.outputCss);
+        this.justResize = options.justResize || true;
 
         if (options.outputStyleDirectoryPath) {
             this.outputStyleDirectoryPath = options.outputStyleDirectoryPath;
@@ -269,12 +311,16 @@ SpriteSheetConfiguration = (function() {
 
         return ImageMagick.identify(filepath, function(image) {
             if (_this.derived) {
-                image.width = image.width * _this.baseRatio;
-                image.height = image.height * _this.baseRatio;
-                if (Math.round(image.width) !== image.width || Math.round(image.height) !== image.height) {
-                    image.width = Math.ceil(image.width);
-                    image.height = Math.ceil(image.height);
-                    console.log("  WARN: Dimensions for " + image.filename + " don't use multiples of the pixel ratio, so they've been rounded.");
+                // resize from original
+                if (!_this.justResize) {
+                    // not resize
+                    image.width = image.width * _this.baseRatio;
+                    image.height = image.height * _this.baseRatio;
+                    if (Math.round(image.width) !== image.width || Math.round(image.height) !== image.height) {
+                        image.width = Math.ceil(image.width);
+                        image.height = Math.ceil(image.height);
+                        console.log("  WARN: Dimensions for " + image.filename + " don't use multiples of the pixel ratio, so they've been rounded.");
+                    }
                 }
                 image.baseRatio = _this.baseRatio;
             }
@@ -284,28 +330,47 @@ SpriteSheetConfiguration = (function() {
     };
 
     SpriteSheetConfiguration.prototype.generateCSS = function() {
-        this.css = this.style.generate({
-            relativeImagePath: this.httpImagePath,
-            images: this.images,
-            pixelRatio: this.pixelRatio,
-            width: this.layout.width,
-            height: this.layout.height,
-            spIdentifier: this.spIdentifier
-        });
+        if (this.derived && this.justResize) {
+            this.css = {};
+        } else {
+            this.css = this.style.generate({
+                relativeImagePath: this.httpImagePath,
+                images: this.images,
+                pixelRatio: this.pixelRatio,
+                width: this.layout.width,
+                height: this.layout.height,
+                spIdentifier: this.spIdentifier
+            });
+        }
+
     };
 
     SpriteSheetConfiguration.prototype.createSprite = function(callback) {
         var _this = this;
 
-        return ImageMagick.composite({
-            filepath: this.outputImageFilePath,
-            images: this.images,
-            width: this.layout.width,
-            height: this.layout.height,
-            downsampling: this.downsampling
-        }, function() {
-            return SpriteSheetBuilder.pngcrush(_this.outputImageFilePath, callback);
-        });
+        if (this.justResize && this.derived) {
+            // resize from base
+            return ImageMagick.resizeImage({
+                filepath: this.outputImageFilePath,
+                srcpath: SpriteSheetConfiguration.baseConfiguration.outputImageFilePath,
+                width: this.layout.width,
+                height: this.layout.height,
+                downsampling: this.downsampling,
+                baseRatio: this.baseRatio
+            }, function() {
+                return SpriteSheetBuilder.pngcrush(_this.outputImageFilePath, callback);
+            });
+        } else {
+            return ImageMagick.composite({
+                filepath: this.outputImageFilePath,
+                images: this.images,
+                width: this.layout.width,
+                height: this.layout.height,
+                downsampling: this.downsampling
+            }, function() {
+                return SpriteSheetBuilder.pngcrush(_this.outputImageFilePath, callback);
+            });
+        }
     };
 
     SpriteSheetConfiguration.prototype.summary = function() {
