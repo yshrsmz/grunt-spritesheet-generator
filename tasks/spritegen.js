@@ -7,7 +7,7 @@ module.exports = function(grunt) {
 
     grunt.registerMultiTask('spritegen', 'Compile images to sprite sheet', function() {
         var options = this.options({
-                justResize: true
+                justResize: false
             }),
             done = this.async(),
             srcFiles;

@@ -17,7 +17,7 @@ Currently  not available via npm, so you have to manually add the repository in 
 
 ```package.json
 "devDependencies": {
-    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.3.0"
+    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.3.2"
 }
 ```  
 
@@ -70,6 +70,12 @@ grunt.loadNpmTasks('grunt-spritesheet-generator');
 
 Version History
 ===============
+## 0.3.2
+- make justResize optional. enable it from option.
+- show warning message when source image's dimensions are odd.
+
+## 0.3.1
+- add justResize option so that legacy spritesheet can be converted from retina spritesheet
 
 ## 0.3.0
 - change default template to use placeholder, instead of mixin.

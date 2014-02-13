@@ -12,6 +12,12 @@ var ImageMagick = require('./imagemagick'),
     separator = path.sep || '/',
     _ = require('underscore'),
     mustache = require('mustache'),
+
+    // console colors
+    colorRed = '\u001b[31m',
+    colorGreen = '\u001b[32m',
+    colorReset = '\u001b[0m',
+
     SpriteSheetBuilder,
     SpriteSheetConfiguration,
 
@@ -49,7 +55,7 @@ SpriteSheetBuilder = (function() {
         this.files = options.images;
         this.outputConfigurations = {};
         this.outputDirectory = path.resolve(options.outputDirectory);
-        this.justResize = options.justResize || true;
+        this.justResize = options.justResize;
 
         if (options.outputCss) {
             this.outputStyleFilePath = [this.outputDirectory, options.outputCss].join(separator);
@@ -115,7 +121,7 @@ SpriteSheetBuilder = (function() {
         return async.series([
             function(callback) {
                 return async.forEachSeries(_this.configs, _this.buildConfig, callback);
-            }, ensureDirectory(this.outputStyleDirectoryPath), this.writeStyleSheet
+            }, ensureDirectory(this.outputStyleDirectoryPath), this.writeStyleSheet, SpriteSheetBuilder.summaryErrors
         ], done);
     };
 
@@ -222,6 +228,31 @@ SpriteSheetBuilder = (function() {
         return builder;
     };
 
+     // store errors
+    SpriteSheetBuilder.errors = [];
+
+    /**
+     * show errors
+     * @param callback
+     * @returns {*}
+     */
+    SpriteSheetBuilder.summaryErrors = function(callback) {
+        var _this = SpriteSheetBuilder;
+
+        console.log('----------');
+        console.log('following error has been occurred while processing:');
+        if (_this.errors.length > 0) {
+            [].forEach.call(_this.errors, function(error) {
+                console.log(error);
+            });
+        } else {
+            console.log(colorGreen + 'no errors have been captured!' + colorReset);
+        }
+
+
+        return callback();
+    };
+
     return SpriteSheetBuilder;
 
 })();
@@ -247,7 +278,7 @@ SpriteSheetConfiguration = (function() {
         this.name = options.name || "default";
         this.layoutType = options.layoutType || 'default';
         this.spIdentifier = options.spIdentifier || getFileNameWithoutExtension(options.outputCss);
-        this.justResize = options.justResize || true;
+        this.justResize = options.justResize;
 
         if (options.outputStyleDirectoryPath) {
             this.outputStyleDirectoryPath = options.outputStyleDirectoryPath;
@@ -310,6 +341,14 @@ SpriteSheetConfiguration = (function() {
         var _this = this;
 
         return ImageMagick.identify(filepath, function(image) {
+            
+            // warn if width/height is not even
+            if ((image.width % 2 !== 0) || (image.height % 2 !== 0)) {
+                var msg = colorRed + '  WARN: Dimensions for ' + image.filename + ' is not even. So layout might be differ from each ratio.' + colorReset;
+                SpriteSheetBuilder.errors.push(msg);
+                console.log(msg);
+            }
+
             if (_this.derived) {
                 // resize from original
                 if (!_this.justResize) {
@@ -319,7 +358,10 @@ SpriteSheetConfiguration = (function() {
                     if (Math.round(image.width) !== image.width || Math.round(image.height) !== image.height) {
                         image.width = Math.ceil(image.width);
                         image.height = Math.ceil(image.height);
-                        console.log("  WARN: Dimensions for " + image.filename + " don't use multiples of the pixel ratio, so they've been rounded.");
+                        
+                        var msg2 = colorRed + "  WARN: Dimensions for " + image.filename + " don't use multiples of the pixel ratio, so they've been rounded." + colorReset;
+                    SpriteSheetBuilder.errors.push(msg2);
+                    console.log(msg2);
                     }
                 }
                 image.baseRatio = _this.baseRatio;
