@@ -17,7 +17,7 @@ Currently  not available via npm, so you have to manually add the repository in 
 
 ```package.json
 "devDependencies": {
-    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.3.2"
+    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.3.3"
 }
 ```  
 
