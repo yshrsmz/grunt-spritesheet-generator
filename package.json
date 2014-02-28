@@ -1,6 +1,6 @@
 {
   "name": "grunt-spritesheet-generator",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "description": "grunt task for making css spritesheet",
   "main": "Gruntfile.js",
   "scripts": {
