@@ -3,8 +3,9 @@ var im = require('imagemagick'),
     async = require('async'),
     fs = require('fs'),
     path = require('path'),
-    qfs = require('q-io/fs'),
     Layout = require('layout'),
+    gmsmith = require('gmsmith'),
+    CanvasSmith = require('./canvas.smith.js'),
 
     // console colors
     colorRed = '\u001b[31m',
@@ -19,125 +20,225 @@ function getFileNameWithoutExtension(path) {
 
     return result;
 }
+var Builder = (function() {
+    function Builder(options) {
+        this.options = options;
+        this.outputDirectory = path.resolve(options.outputBasePath);
+        this.spriteConfigs = {};
+        this.baseSpriteConfig = void 0;
+        this.justResize = options.justResize;
 
-function Builder(options) {
-    this.options = options;
-    this.outputDirectory = path.resolve(options.outputBasePath);
-    this.spriteConfigs = {};
-    this.baseSpriteConfig = void 0;
-    this.justResize = options.justResize;
+        this.outputStyleFilePath = path.resolve(this.outputDirectory, options.outputCss);
+        this.outputStyleDirectoryPath = path.dirname(this.outputStyleFilePath);
 
-    this.outputStyleFilePath = path.resolve(this.outputDirectory, options.outputCss);
-    this.outputStyleDirectoryPath = path.dirname(this.outputStyleFilePath);
+        // add retina config
+        this.makeSpriteConfig('retina');
 
-    // add retina config
-    this.makeSpriteConfig('retina');
+        // add legacy config
+        this.makeSpriteConfig('legacy');
+    };
 
-    // add legacy config
-    this.makeSpriteConfig('legacy');
-};
+    Builder.prototype.makeSpriteConfig = function(type) {
+        var that = this,
+            config;
 
-Builder.prototype.makeSpriteConfig = function(type) {
-    var that = this,
-        config;
-
-    if (that.options.output.hasOwnProperty(type) && that.options.output[type].hasOwnProperty('outputImage')) {
-        config = {
-            outputDirectory: that.outputDirectory,
-            files: that.options.images,
-            spIdentifier: that.options.spIdentifier || getFileNameWithoutExtension(that.options.outputCss),
-            downsampling: that.options.downsampling,
-            pixelRatio: that.options.output[type].pixelRatio || 1,
-            justResize: that.options.justResize,
-            layout: that.options.layoutType
+        if (that.options.output.hasOwnProperty(type) && that.options.output[type].hasOwnProperty('outputImage')) {
+            config = {
+                outputDirectory: that.outputDirectory,
+                outputFilePath: that.options.output[type].outputImage,
+                files: that.options.images,
+                spIdentifier: that.options.spIdentifier || getFileNameWithoutExtension(that.options.outputCss),
+                downsampling: that.options.downsampling,
+                pixelRatio: that.options.output[type].pixelRatio || 1,
+                justResize: that.options.justResize,
+                layout: that.options.layoutType,
+                padding: that.options.padding
+            }
+            if (!this.baseSpriteConfig || config.pixelRatio > this.baseSpriteConfig.pixelRatio) {
+                this.baseSpriteConfig = config;
+            }
+            that.spriteConfigs[type] = config;
         }
-        if (!this.baseSpriteConfig || config.pixelRatio > this.baseSpriteConfig.pixelRatio) {
-            this.baseSpriteConfig = config;
+    };
+
+    Builder.prototype.build = function(callback) {
+        var that = this,
+            keys = Object.keys(that.spriteConfigs),
+            config;
+
+        that.configs = [];
+
+        for (var i = 0, len = keys.length; i < len; i++) {
+            config = that.spriteConfigs[keys[i]];
+            config.baseRatio = config.pixelRatio / that.baseSpriteConfig.pixelRatio;
+            that.configs.push(config);
         }
-        that.spriteConfigs[type] = config;
-    }
-};
 
-Builder.prototype.build = function(done) {
-    var that = this,
-        keys = Object.keys(that.spriteConfigs),
-        config;
+        this.configs = this.configs.sort(function(a, b) {
+            if (a.pixelRatio > b.pixelRatio) {
+                return -1
+            } else if (a.pixelRatio < b.pixelRatio) {
+                return 1;
+            }
+            return 0;
+        });
 
-    that.configs = [];
+        async.series([
+            function(callback) {
+                async.forEachSeries(that.configs, that.compile2.bind(that), callback);
+            },
+            that.compositeSprite.bind(that),
+            that.writeStyleSheet.bind(that),
+            that.summaryErrors.bind(that)], callback);
+    };
 
-    for (var i = 0, len = keys.length; i < len; i++) {
-        config = that.spriteConfigs[keys[i]];
-        config.baseRatio = config.pixelRatio / that.baseSpriteConfig.pixelRatio;
-        that.configs.push(config);
-    }
+    Builder.prototype.compile = function(config, callback) {
+        var that = this,
+            layer = new Layout(config.layout);
 
-    this.configs = this.configs.sort(function(a, b) {
-        if (a.pixelRatio > b.pixelRatio) {
-            return -1
-        } else if (a.pixelRatio < b.pixelRatio) {
-            return 1;
-        }
-        return 0;
-    });
+        config.imageData = [];
 
-    async.series([
-        function(callback) {
-            async.forEachSeries(that.configs, that.compile.bind(that), callback);
-        },
-        that.compositeSprite.bind(that),
-        that.writeStyleSheet.bind(that),
-        that.summaryErrors.bind(that)], done);
-};
+        async.forEachSeries(config.files, function(file, cb) {
+            var that = this;
 
-Builder.prototype.compile = function(config, callback) {
-    var that = this,
-        layer = new Layout(config.layout);
+            im.identify(file, function(err, image) {
+                if ( err ) {
+                    console.log('Image Identify check error! file: ' + file);
+                }
+                config.imageData.push({
+                    name: path.basename(image.artifacts.filename.split('.')[0]),
+                    width: image.width * config.baseRatio,
+                    height: image.height * config.baseRatio
+                });
+                cb();
+            });
+        }, callback);
+    };
 
-    config.imageData = [];
+    Builder.prototype.compile2 = function(config, callback) {
+        var that = this,
+            layer = new Layout(config.layout);
 
-    async.forEachSeries(config.files, function(file, cb) {
+        config.imageData = [];
+
+        gmsmith.createImages(config.files, function(err, images) {
+
+            images.forEach(function(img) {
+                var width = img.width * config.baseRatio,
+                    height = img.height * config.baseRatio,
+                    meta = {
+                        img: img,
+                        actualWidth: width,
+                        actualHeight: height
+                    };
+
+                layer.addItem({
+                    width: width,
+                    height: height,
+                    meta: meta
+                });
+            });
+
+            config.layoutData = layer.export();
+
+            callback();
+        });
+    };
+
+    Builder.prototype.compositeSprite = function(callback) {
         var that = this;
 
-        im.identify(file, function(err, image) {
-            if ( err ) {
-                console.log('Image Identify check error! file: ' + file);
+        async.waterfall([
+//            function(callback) {
+//                // create layout data
+//                that.configs.forEach(function(config) {
+//                    var layer = new Layout(config.layout);
+//
+//                    config.imageData.forEach(function(image) {
+//                        layer.addItem({
+//                            height: image.height,
+//                            width: image.width,
+//                            meta: image.name
+//                        });
+//                    });
+//
+//                    var info = layer.export();
+//
+//                    config.layoutData = info;
+//                });
+//
+//                callback();
+//            },
+            function(callback) {
+
+                // create canvas
+                async.forEachSeries(that.configs, function(config, cb) {
+                    var width = Math.max(config.layoutData.width || 0, 0),
+                        height = Math.max(config.layoutData.height || 0, 0),
+                        itemsExist = config.layoutData.items.length;
+
+                    if (itemsExist) {
+                        width -= config.padding;
+                        height -= config.padding;
+                    }
+
+                    config.layoutData.width = width;
+                    config.layoutData.height = height;
+
+                    if (itemsExist) {
+                        gmsmith.createCanvas(width, height, function(err, canvas) {
+                            config.canvas = canvas;
+
+                            cb();
+                        });
+                    } else {
+                        config.canvas = null;
+                        cb();
+                    }
+                }, callback);
+            },
+            function(callback) {
+                // generate spritesheet
+                async.forEachSeries(that.configs, function(config, cb) {
+                    var items = config.layoutData.items,
+                        canvas = config.canvas;
+
+                    if (!canvas) {
+                        cb();
+                    }
+
+                    var canvasSmith = new CanvasSmith(canvas),
+                        ext = path.extname(config.outputFilePath).split('.');
+
+                    canvasSmith.addImages(items);
+
+                    canvasSmith.export({
+                        format: ext[ext.length - 1],
+                        quality: 90
+                    }, function(err, imgStr) {
+                        config.renderedImage = imgStr;
+                        cb();
+                    });
+                }, callback);
+            },
+            function(callback) {
+                cb(null, that.configs);
             }
-            config.imageData.push({
-                name: path.basename(image.artifacts.filename.split('.')[0]),
-                width: image.width * config.baseRatio,
-                height: image.height * config.baseRatio
-            });
-            cb();
-        });
-    }, callback);
-};
+        ], callback);
 
-Builder.prototype.compositeSprite = function(callback) {
-    var that = this;
+    };
 
-    async.forEachSeries(that.configs, function(config, cb) {
-        var layer = new Layout(config.layout);
-
-        config.imageData.forEach(function(image) {
-            layer.addItem({
-                height: image.height,
-                width: image.width,
-                meta: image.name
-            });
-        });
-
-        var info = layer.export();
-
+    Builder.prototype.writeStyleSheet = function(cb) {
         cb();
-    }, callback)
-};
+    };
 
-Builder.prototype.writeStyleSheet = function(cb) {
-    cb();
-};
+    Builder.prototype.summaryErrors = function(cb) {
+        cb();
+    };
 
-Builder.prototype.summaryErrors = function(cb) {
-    cb();
-};
+
+    return Builder;
+})();
+
 
 module.exports = Builder;

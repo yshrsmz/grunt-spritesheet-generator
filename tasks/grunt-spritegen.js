@@ -34,7 +34,8 @@ module.exports = function(grunt) {
     grunt.registerMultiTask('spritegen', 'Compile images to sprite sheet', function() {
         var options = this.options({
                 justResize: false,
-                layoutType: 'default'
+                layoutType: 'default',
+                padding: 0
             }),
             done = this.async(),
             srcFiles;
@@ -64,7 +65,10 @@ module.exports = function(grunt) {
             options.outputBasePath = file.dest;
 
             builder = new Builder(options);
-            builder.build(callback);
+            builder.build(function(err, configs) {
+
+                done();
+            });
 
         }, done);
     });
