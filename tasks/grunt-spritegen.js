@@ -35,7 +35,8 @@ module.exports = function(grunt) {
         var options = this.options({
                 justResize: false,
                 layoutType: 'default',
-                padding: 0
+                padding: 0,
+                templateUrl: __dirname + '/template_placeholder.mustache'
             }),
             done = this.async(),
             srcFiles;
@@ -66,7 +67,6 @@ module.exports = function(grunt) {
 
             builder = new Builder(options);
             builder.build(function(err, configs) {
-
                 done();
             });
 

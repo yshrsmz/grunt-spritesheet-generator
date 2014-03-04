@@ -1,11 +1,12 @@
-var im = require('imagemagick'),
-    _ = require('underscore'),
-    async = require('async'),
+var async = require('async'),
     fs = require('fs'),
     path = require('path'),
     Layout = require('layout'),
-    gmsmith = require('gmsmith'),
-    CanvasSmith = require('./canvas.smith.js'),
+    gmsmith = require('./gmsmith.js'),
+    CanvasSmith = require('./canvas.smith.js')
+    qfs = require('q-io/fs'),
+    gm = require('gm'),
+    mustache = require('mustache'),
 
     // console colors
     colorRed = '\u001b[31m',
@@ -51,8 +52,10 @@ var Builder = (function() {
                 downsampling: that.options.downsampling,
                 pixelRatio: that.options.output[type].pixelRatio || 1,
                 justResize: that.options.justResize,
-                layout: that.options.layoutType,
-                padding: that.options.padding
+                layoutType: that.options.layoutType,
+                padding: that.options.padding,
+                httpImagePath: that.options.httpImagePath ||
+                    path.relative(that.outputStyleDirectoryPath, that.options.output[type].outputImage)
             }
             if (!this.baseSpriteConfig || config.pixelRatio > this.baseSpriteConfig.pixelRatio) {
                 this.baseSpriteConfig = config;
@@ -85,94 +88,77 @@ var Builder = (function() {
 
         async.series([
             function(callback) {
-                async.forEachSeries(that.configs, that.compile2.bind(that), callback);
+                // スプライト画像作成
+                async.forEachSeries(that.configs, that.compile.bind(that), callback);
             },
-            that.compositeSprite.bind(that),
             that.writeStyleSheet.bind(that),
-            that.summaryErrors.bind(that)], callback);
+            Builder.summaryErrors
+        ], callback);
+
     };
 
     Builder.prototype.compile = function(config, callback) {
         var that = this,
-            layer = new Layout(config.layout);
+            layer = new Layout(config.layoutType),
+            funcArray = [];
 
-        config.imageData = [];
+        if (config.baseRatio < 1) {
+            // resize
+            funcArray = [
+                function(callback) {
+                    that.resizeLayoutData(config, that.configs);
+                    callback();
+                },
+                function resizeSpriteImage(callback){
+                    var baseSpritePath = path.resolve(that.baseSpriteConfig.outputDirectory, that.baseSpriteConfig.outputFilePath),
+                        targetSpritePath = path.resolve(config.outputDirectory, config.outputFilePath),
+                        targetDirPath = path.dirname(targetSpritePath);
 
-        async.forEachSeries(config.files, function(file, cb) {
-            var that = this;
+                    if (fs.statSync(baseSpritePath).isFile()) {
+                        qfs.makeTree(targetDirPath).then(function() {
+                            var _gm = gm.subClass({imageMagick: true});
+                            _gm(baseSpritePath).resize(config.layoutData.width, config.layoutData.height)
+                                .unsharp(2, 1.4, 0.5, 0)
+                                .write(targetSpritePath, function() {
+                                    callback();
+                                });
+                        });
 
-            im.identify(file, function(err, image) {
-                if ( err ) {
-                    console.log('Image Identify check error! file: ' + file);
+                    } else {
+                        Builder.errors(colorRed + 'Fatal: base sprite' + ' "' + baseSpritePath + '" doesn\'t exist.' + colorReset);
+                        callback();
+                    }
                 }
-                config.imageData.push({
-                    name: path.basename(image.artifacts.filename.split('.')[0]),
-                    width: image.width * config.baseRatio,
-                    height: image.height * config.baseRatio
-                });
-                cb();
-            });
-        }, callback);
-    };
+            ];
+        } else {
+            // composite
+            funcArray = [
+                function layoutImages(callback) {
+                    gmsmith.createImages(config.files, function(err, images) {
 
-    Builder.prototype.compile2 = function(config, callback) {
-        var that = this,
-            layer = new Layout(config.layout);
+                        images.forEach(function(img) {
+                            var width = img.width * config.baseRatio,
+                                height = img.height * config.baseRatio,
+                                meta = {
+                                    img: img,
+                                    name: path.basename(img.file).split('.')[0],
+                                    actualWidth: width,
+                                    actualHeight: height
+                                };
 
-        config.imageData = [];
+                            layer.addItem({
+                                width: width + config.padding,
+                                height: height + config.padding,
+                                meta: meta
+                            });
+                        });
 
-        gmsmith.createImages(config.files, function(err, images) {
+                        config.layoutData = layer.export();
 
-            images.forEach(function(img) {
-                var width = img.width * config.baseRatio,
-                    height = img.height * config.baseRatio,
-                    meta = {
-                        img: img,
-                        actualWidth: width,
-                        actualHeight: height
-                    };
-
-                layer.addItem({
-                    width: width,
-                    height: height,
-                    meta: meta
-                });
-            });
-
-            config.layoutData = layer.export();
-
-            callback();
-        });
-    };
-
-    Builder.prototype.compositeSprite = function(callback) {
-        var that = this;
-
-        async.waterfall([
-//            function(callback) {
-//                // create layout data
-//                that.configs.forEach(function(config) {
-//                    var layer = new Layout(config.layout);
-//
-//                    config.imageData.forEach(function(image) {
-//                        layer.addItem({
-//                            height: image.height,
-//                            width: image.width,
-//                            meta: image.name
-//                        });
-//                    });
-//
-//                    var info = layer.export();
-//
-//                    config.layoutData = info;
-//                });
-//
-//                callback();
-//            },
-            function(callback) {
-
-                // create canvas
-                async.forEachSeries(that.configs, function(config, cb) {
+                        callback();
+                    });
+                },
+                function createCanvas(callback) {
                     var width = Math.max(config.layoutData.width || 0, 0),
                         height = Math.max(config.layoutData.height || 0, 0),
                         itemsExist = config.layoutData.items.length;
@@ -188,23 +174,20 @@ var Builder = (function() {
                     if (itemsExist) {
                         gmsmith.createCanvas(width, height, function(err, canvas) {
                             config.canvas = canvas;
-
-                            cb();
+                            callback();
                         });
                     } else {
                         config.canvas = null;
-                        cb();
+                        callback();
                     }
-                }, callback);
-            },
-            function(callback) {
-                // generate spritesheet
-                async.forEachSeries(that.configs, function(config, cb) {
+                },
+                function buildSprite(callback) {
+                    // generate spritesheet
                     var items = config.layoutData.items,
                         canvas = config.canvas;
 
                     if (!canvas) {
-                        cb();
+                        callback();
                     }
 
                     var canvasSmith = new CanvasSmith(canvas),
@@ -217,23 +200,132 @@ var Builder = (function() {
                         quality: 90
                     }, function(err, imgStr) {
                         config.renderedImage = imgStr;
-                        cb();
+                        callback();
                     });
-                }, callback);
-            },
-            function(callback) {
-                cb(null, that.configs);
+                },
+                function writeSpriteSheet(callback) {
+                    var spritePath = path.resolve(config.outputDirectory, config.outputFilePath),
+                        spriteDir = path.dirname(spritePath);
+
+                    qfs.makeTree(spriteDir).then(function() {
+                        fs.writeFileSync(spritePath, config.renderedImage, 'binary');
+                        callback();
+                    });
+                }
+            ];
+        }
+
+        async.waterfall(funcArray, callback);
+    };
+
+    Builder.prototype.writeStyleSheet = function(callback) {
+        var that = this,
+            cssData = {},
+            template = fs.readFileSync(that.options.templateUrl, 'utf8'),
+            outputDir = that.outputStyleDirectoryPath,
+            outputPath = that.outputStyleFilePath,
+            result;
+
+        that.configs.forEach(function(config) {
+            cssData[(config.baseRatio === 1) ? 'retina' : 'legacy'] = that.generateCSSData(config);
+        });
+
+        result = mustache.render(template, cssData);
+
+        qfs.makeTree(outputDir).then(function() {
+            fs.writeFileSync(outputPath, result);
+            callback();
+        });
+    };
+
+    Builder.prototype.generateCSSData = function(config) {
+        var css = {
+            imagePath: config.httpImagePath,
+            imageWidth: config.layoutData.width,
+            imageHeight: config.layoutData.height,
+            pixelRatio: config.pixelRatio,
+            spIdentifier: config.spIdentifier,
+            styles: []
+        };
+
+        config.layoutData.items.forEach(function(item) {
+            css.styles.push({
+                imagePath: config.httpImagePath,
+                imageWidth: config.layoutData.width,
+                imageHeight: config.layoutData.height,
+                pixelRatio: config.pixelRatio,
+                spIdentifier: config.spIdentifier,
+                name: item.meta.name,
+                x: item.x,
+                y: item.y,
+                width: item.meta.actualWidth,
+                height: item.meta.actualHeight
+            });
+        });
+
+        return css;
+    };
+
+    Builder.prototype.resizeLayoutData = function(currentConfig, configs) {
+        var that = this,
+            baseLayout,
+            baseRatio = currentConfig.baseRatio,
+            itemHeight, itemWidth;
+
+        configs.forEach(function(config) {
+            if (config.baseRatio === 1) {
+                baseLayout = config.layoutData;
             }
-        ], callback);
+        });
 
+        currentConfig.layoutData = {
+            height: baseLayout.height * baseRatio,
+            width: baseLayout.width * baseRatio,
+            items: []
+        };
+
+        baseLayout.items.forEach(function(item) {
+            itemHeight = Math.ceil(item.meta.actualHeight * baseRatio);
+            itemWidth = Math.ceil(item.meta.actualWidth * baseRatio);
+
+            if (baseRatio === 1 && (itemHeight % 2 !== 0 || itemWidth % 2 !== 0)) {
+                Builder.errors.push(colorRed + 'WARN: Dimensions for ' + item.meta.img.file +
+                    ' is not even. So they\'ve been rounded.' + colorReset);
+            }
+
+            currentConfig.layoutData.items.push({
+                height: Math.ceil(item.height * baseRatio),
+                width: Math.ceil(item.width * baseRatio),
+                x: Math.ceil(item.x * baseRatio),
+                y: Math.ceil(item.y * baseRatio),
+                meta: {
+                    name: item.meta.name,
+                    img: item.meta.img,
+                    actualHeight: itemHeight,
+                    actualWidth: itemWidth
+                }
+            });
+        });
     };
 
-    Builder.prototype.writeStyleSheet = function(cb) {
-        cb();
-    };
+    Builder.errors = [];
 
-    Builder.prototype.summaryErrors = function(cb) {
-        cb();
+    Builder.summaryErrors = function(callback) {
+
+        var that = Builder;
+
+        console.log('----------');
+        console.log('following error has been occurred while processing:');
+
+        if (that.errors.length > 0) {
+            [].forEach.call(that.errors, function(error) {
+                console.log(error);
+            });
+        } else {
+            console.log(colorGreen + 'no errors have been captured!' + colorReset);
+        }
+
+        callback();
     };
 
 

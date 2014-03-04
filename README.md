@@ -1,7 +1,7 @@
 grunt-spritesheet-generator
 ===========================
 
-Highly inspired by [node-spritesheet](https://github.com/richardbutler/node-spritesheet) and [grunt-spritesheet](https://nicholasstephan/grunt-spritesheet).
+Highly inspired by [spritesmith](https://github.com/Ensighten/spritesmith), [node-spritesheet](https://github.com/richardbutler/node-spritesheet) and [grunt-spritesheet](https://nicholasstephan/grunt-spritesheet).
 
 
 
@@ -17,7 +17,7 @@ Currently  not available via npm, so you have to manually add the repository in 
 
 ```package.json
 "devDependencies": {
-    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.3.3"
+    "grunt-spritesheet-generator": "git://github.com/yshrsmz/grunt-spritesheet-generator#v0.4.0"
 }
 ```  
 
@@ -70,6 +70,10 @@ grunt.loadNpmTasks('grunt-spritesheet-generator');
 
 Version History
 ===============
+
+## 0.4.0
+- rewrite everything. much cleaner now.
+
 ## 0.3.2
 - make justResize optional. enable it from option.
 - show warning message when source image's dimensions are odd.
