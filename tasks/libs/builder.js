@@ -2,8 +2,8 @@ var async = require('async'),
     fs = require('fs'),
     path = require('path'),
     Layout = require('layout'),
-    gmsmith = require('./gmsmith.js'),
-    CanvasSmith = require('./canvas.smith.js')
+    gmsmith = require('gmsmith'),
+    CanvasSmith = require('./canvas.smith.js'),
     qfs = require('q-io/fs'),
     gm = require('gm'),
     mustache = require('mustache'),
@@ -37,7 +37,7 @@ var Builder = (function() {
 
         // add legacy config
         this.makeSpriteConfig('legacy');
-    };
+    }
 
     Builder.prototype.makeSpriteConfig = function(type) {
         var that = this,
@@ -56,7 +56,7 @@ var Builder = (function() {
                 padding: that.options.padding,
                 httpImagePath: that.options.httpImagePath ||
                     path.relative(that.outputStyleDirectoryPath, that.options.output[type].outputImage)
-            }
+            };
             if (!this.baseSpriteConfig || config.pixelRatio > this.baseSpriteConfig.pixelRatio) {
                 this.baseSpriteConfig = config;
             }
@@ -79,7 +79,7 @@ var Builder = (function() {
 
         this.configs = this.configs.sort(function(a, b) {
             if (a.pixelRatio > b.pixelRatio) {
-                return -1
+                return -1;
             } else if (a.pixelRatio < b.pixelRatio) {
                 return 1;
             }
@@ -120,6 +120,8 @@ var Builder = (function() {
                             _gm(baseSpritePath).resize(config.layoutData.width, config.layoutData.height)
                                 .unsharp(2, 1.4, 0.5, 0)
                                 .write(targetSpritePath, function() {
+                                    console.log('spritesheet output path: ' + targetSpritePath);
+                                    console.log('  - derived from ' + baseSpritePath);
                                     callback();
                                 });
                         });
@@ -209,6 +211,7 @@ var Builder = (function() {
 
                     qfs.makeTree(spriteDir).then(function() {
                         fs.writeFileSync(spritePath, config.renderedImage, 'binary');
+                        console.log('spritesheet output path: ' + spritePath);
                         callback();
                     });
                 }
@@ -234,6 +237,7 @@ var Builder = (function() {
 
         qfs.makeTree(outputDir).then(function() {
             fs.writeFileSync(outputPath, result);
+            console.log('stylesheet output path: ' + outputPath);
             callback();
         });
     };
