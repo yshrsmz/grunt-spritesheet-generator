@@ -260,8 +260,8 @@ var Builder = (function() {
                 pixelRatio: config.pixelRatio,
                 spIdentifier: config.spIdentifier,
                 name: item.meta.name,
-                x: item.x,
-                y: item.y,
+                x: (item.x * -1),
+                y: (item.y * -1),
                 width: item.meta.actualWidth,
                 height: item.meta.actualHeight
             });
