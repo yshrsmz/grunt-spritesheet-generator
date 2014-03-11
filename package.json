@@ -21,22 +21,17 @@
     "url": "https://github.com/yshrsmz/grunt-spritesheet-generator/issues"
   },
   "dependencies": {
-    "grunt": "~0.4.1",
     "async": "~0.2.9",
     "q-fs": "~0.1.36",
-    "underscore": "~1.5.2",
     "mustache": "~0.7.2",
     "layout": "^1.3.1",
     "imagemagick": "^0.1.3",
     "gmsmith": "^0.4.2",
-    "q-io": "^1.11.0"
+    "q-io": "^1.11.0",
+    "gm": "^1.14.2"
   },
   "devDependencies": {
     "grunt-contrib-jshint": "~0.6.4",
-    "grunt": "~0.4.1",
-    "obj-extend": "^0.1.0",
-    "temporary": "0.0.8",
-    "gm": "^1.14.2",
-    "which": "^1.0.5"
+    "grunt": "~0.4.1"
   }
 }
