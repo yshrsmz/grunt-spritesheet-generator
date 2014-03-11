@@ -1,9 +1,9 @@
 grunt-spritesheet-generator
 ===========================
 
-Highly inspired by [spritesmith](https://github.com/Ensighten/spritesmith), [node-spritesheet](https://github.com/richardbutler/node-spritesheet) and [grunt-spritesheet](https://nicholasstephan/grunt-spritesheet).
+Highly inspired by [spritesmith](https://github.com/Ensighten/spritesmith), [node-spritesheet](https://github.com/richardbutler/node-spritesheet) and [grunt-spritesheet](https://github.com/nicholasstephan/grunt-spritesheet).
 
-
+Create spritesheet and corresponding stylesheet for both retina and legacy screen pixelRatio.
 
 Requirements
 ===========
